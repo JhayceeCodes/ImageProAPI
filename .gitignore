@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+# Django-specific files
+*.log
+*.pot
+local_settings.py  # or any file that contains sensitive local configurations
+.env               # environment variables file
+db.sqlite3         # SQLite database file (if used for development and not tracked)
+/media             # User-uploaded media files (can be large, often stored separately)
+
+# IDE-specific files (optional, can be global)
+.vscode/
+.idea/
+*.swp
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
