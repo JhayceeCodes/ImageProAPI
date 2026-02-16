@@ -32,6 +32,7 @@ pip-delete-this-directory.txt
 *.pot
 local_settings.py  # or any file that contains sensitive local configurations
 .env               # environment variables file
+/.venv
 db.sqlite3         # SQLite database file (if used for development and not tracked)
 /media             # User-uploaded media files (can be large, often stored separately)
 
