@@ -29,11 +29,9 @@ pip-delete-this-directory.txt
 
 # Django-specific files
 *.log
-*.pot
-local_settings.py  # or any file that contains sensitive local configurations
-.env               # environment variables file
+.env
 /.venv
-db.sqlite3         # SQLite database file (if used for development and not tracked)
+*.sqlite3
 /media             # User-uploaded media files (can be large, often stored separately)
 
 # IDE-specific files (optional, can be global)
