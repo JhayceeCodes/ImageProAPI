@@ -24,9 +24,23 @@ class ImageOperationSerializer(serializers.ModelSerializer):
                 )
 
         if op_type == "filter":
-            if "type" not in params:
+            allowed_filters = ["grayscale", "blur", "sharpen"]
+            filter_type = params.get("type")
+            if filter_type not in allowed_filters:
                 raise serializers.ValidationError(
-                    "Filter requires type."
+                    f"Invalid filter '{filter_type}'. Allowed: {', '.join(allowed_filters)}"
+                )
+        
+        if op_type == "convert":
+            allowed_formats = ["jpg", "png", "webp"]
+            new_format = params.get("format")
+            if not new_format:
+                raise serializers.ValidationError(
+                    "Convert requires a target 'format'."
+                )
+            if new_format.lower() not in allowed_formats:
+                raise serializers.ValidationError(
+                    f"Invalid format '{new_format}'. Allowed: {', '.join(allowed_formats)}"
                 )
 
         return data
