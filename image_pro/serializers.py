@@ -94,8 +94,19 @@ class ImageUploadSerializer(serializers.ModelSerializer):
     
 
 class ImageDetailSerializer(serializers.ModelSerializer):
+    download_url = serializers.SerializerMethodField()
     class Meta:
         model = Image
         fields = [
-
+            "id",
+            "status",
+            "image_format",
+            "created_at",
+            "download_url"
         ]
+
+    def get_download_url(self, obj):
+        request = self.context.get("request")
+        return request.build_absolute_uri(
+            f"/api/images/{obj.id}/download/"
+        )
