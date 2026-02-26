@@ -49,3 +49,6 @@ coverage.xml
 
 # Translations
 *.mo
+
+celerybeat-schedule*
+media/
