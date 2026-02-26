@@ -1,3 +1,5 @@
+import os
+from django.utils import timezone
 from celery import shared_task
 from PIL import Image as PILImage, ImageFilter
 from django.core.files.base import ContentFile
@@ -75,3 +77,21 @@ def process_image_task(image_id):
         image_obj.status = "failed"
         image_obj.save(update_fields=["status"])
         raise e
+
+
+@shared_task
+def delete_expired_images():
+    now = timezone.now()
+    expired_images = Image.objects.filter(download_expires_at__lte=now)
+
+    for img in expired_images:
+        # Delete original image file
+        if img.original_image and os.path.isfile(img.original_image.path):
+            os.remove(img.original_image.path)
+
+        # Delete processed image file
+        if img.processed_image and os.path.isfile(img.processed_image.path):
+            os.remove(img.processed_image.path)
+
+        # Delete the model instance
+        img.delete()       
