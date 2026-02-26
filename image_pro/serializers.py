@@ -93,7 +93,7 @@ class ImageUploadSerializer(serializers.ModelSerializer):
         return image
     
 
-class InageDetailSerializer(serializers.ModelSerializer):
+class ImageDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = [
