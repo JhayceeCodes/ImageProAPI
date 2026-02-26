@@ -47,7 +47,7 @@ class ImageOperationSerializer(serializers.ModelSerializer):
     
 
 class ImageUploadSerializer(serializers.ModelSerializer):
-    operation = ImageOperationSerializer(many=True, write_only=True)
+    operations = ImageOperationSerializer(many=True, write_only=True)
 
     class Meta: 
         model = Image
