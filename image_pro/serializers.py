@@ -52,7 +52,21 @@ class ImageUploadSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context["request"]
         operations = data.get("operations", [])
+        image_file = data.get("original_image")
 
+        #file size
+        if image_file:
+            if request.user.is_authenticated:
+                max_size = 10 * 1024 * 1024  
+            else:
+                max_size = 2 * 1024 * 1024   
+
+            if image_file.size > max_size:
+                raise serializers.ValidationError(
+                    f"File size exceeds allowed limit ({max_size // (1024 * 1024)}MB)."
+                )
+
+        #compression limit
         for op in operations:
             if op["operation_type"] == "compress":
                 quality = op["parameters"].get("quality")
@@ -67,6 +81,12 @@ class ImageUploadSerializer(serializers.ModelSerializer):
                         raise serializers.ValidationError(
                             "Anonymous users: quality must be 40-80"
                         )
+                    
+        if not request.user.is_authenticated and len(operations) > 2:
+            raise serializers.ValidationError(
+                "Anonymous users can only perform 2 operations"
+            )
+
 
         return data
     
