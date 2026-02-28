@@ -1,5 +1,9 @@
 import json
 from rest_framework import serializers
+from rest_framework.reverse import reverse
+from PIL import Image as PILImage
+from django.utils import timezone
+from datetime import timedelta
 from .models import Image, ImageOperation
 
 
@@ -48,8 +52,8 @@ class ImageOperationSerializer(serializers.ModelSerializer):
 
 
 class ImageUploadSerializer(serializers.ModelSerializer):
-    # Accept JSON string from Postman form-data
     operations = serializers.CharField(write_only=True)
+    detail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Image
@@ -59,9 +63,18 @@ class ImageUploadSerializer(serializers.ModelSerializer):
             "image_format",
             "operations",
             "status",
+            "detail_url",
             "created_at",
         ]
-        read_only_fields = ["id", "status", "created_at"]
+        read_only_fields = ["id", "status", "created_at", "detail_url"]
+    
+    def get_detail_url(self, obj):
+        request = self.context.get("request")
+        return reverse(
+            "images-detail",
+            kwargs={"pk": obj.pk},
+            request=request
+        )
 
     def validate_operations(self, value):
         try:
@@ -126,17 +139,16 @@ class ImageUploadSerializer(serializers.ModelSerializer):
             user=request.user if request.user.is_authenticated else None,
             is_anonymous=not request.user.is_authenticated,
             status="pending",
+            download_expires_at=timezone.now() + timedelta(hours=24),  #auto expiry in 24hrs
             **validated_data
         )
-
-        # Create ImageOperation objects linked to the Image
         for op_data in operations_data:
             ImageOperation.objects.create(
                 image=image,
                 **op_data
             )
 
-        # Trigger async processing
+
         from .tasks import process_image_task
         process_image_task.delay(image.id)
 
@@ -144,18 +156,38 @@ class ImageUploadSerializer(serializers.ModelSerializer):
 
 class ImageDetailSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField()
+    seconds_remaining = serializers.SerializerMethodField()
     class Meta:
         model = Image
         fields = [
             "id",
             "status",
             "image_format",
+            "estimated_ready_at",
+            "seconds_remaining",
+            "download_url",
             "created_at",
-            "download_url"
         ]
 
     def get_download_url(self, obj):
         request = self.context.get("request")
-        return request.build_absolute_uri(
-            f"/api/images/{obj.id}/download/"
-        )
+
+        if obj.status == "completed":
+            return reverse(
+                "images-download",
+                kwargs={"pk": obj.pk},
+                request=request
+            )
+
+        return None
+    
+
+    def get_seconds_remaining(self, obj):
+        if obj.status == "pending":
+            return 8
+
+        if obj.status == "processing" and obj.estimated_ready_at:
+            remaining = obj.estimated_ready_at - timezone.now()
+            return max(int(remaining.total_seconds()), 0)
+
+        return None

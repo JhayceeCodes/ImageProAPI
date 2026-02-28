@@ -30,6 +30,9 @@ class Image(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
     download_expires_at = models.DateTimeField(null=True, blank=True)
+    processing_started_at = models.DateTimeField(null=True, blank=True)
+    processing_completed_at = models.DateTimeField(null=True, blank=True)
+    estimated_ready_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Image {self.id}"

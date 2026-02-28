@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 from django.utils import timezone
 from datetime import timedelta
-
 from .models import Image
 from .serializers import ImageUploadSerializer, ImageDetailSerializer
 
@@ -24,7 +23,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         if user.is_authenticated:
             return Image.objects.filter(user=user)
 
-        # Anonymous users should not list anything
+        #none for anonymous users
         return Image.objects.none()
     
     @action(detail=True, methods=["get"])
@@ -38,7 +37,6 @@ class ImageViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-        # Check status
         if image.status != "completed":
             return Response(
                 {"error": "Image not ready"},
@@ -47,7 +45,7 @@ class ImageViewSet(viewsets.ModelViewSet):
 
         now = timezone.now()
 
-        # Expiry check
+        #expiry check
         if image.download_expires_at:
             if now > image.download_expires_at:
                 return Response(
@@ -55,7 +53,6 @@ class ImageViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-        # First download → set expiry
         if not image.download_expires_at:
             image.download_expires_at = now + timedelta(minutes=5)
             image.save(update_fields=["download_expires_at"])
