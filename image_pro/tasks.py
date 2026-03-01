@@ -10,7 +10,6 @@ from .models import Image
 
 
 
-
 @shared_task
 def process_image_task(image_id):
     image_obj = None

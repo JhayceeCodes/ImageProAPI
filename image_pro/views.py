@@ -1,9 +1,10 @@
+import boto3
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.core.files.storage import default_storage
+from django.http import FileResponse
 from datetime import timedelta
 from .models import Image
 from .serializers import ImageUploadSerializer, ImageDetailSerializer
@@ -57,8 +58,25 @@ class ImageViewSet(viewsets.ModelViewSet):
             image.download_expires_at = now + timedelta(minutes=5)
             image.save(update_fields=["download_expires_at"])
 
-        signed_url = image.processed_image.url
+        #displays image in browser directly from s3 bucket
+        """signed_url = image.processed_image.url
 
         return Response({
             "download_url": signed_url
-        })
+        })"""
+
+        #automatically download image from s3
+        s3 = boto3.client("s3")
+        bucket_name = image.processed_image.storage.bucket_name
+        key = image.processed_image.name
+
+        try:
+            s3_object = s3.get_object(Bucket=bucket_name, Key=key)
+            response = FileResponse(
+                s3_object['Body'],
+                content_type="application/octet-stream"
+            )
+            response['Content-Disposition'] = f'attachment; filename="{key.split("/")[-1]}"'
+            return response
+        except s3.exceptions.NoSuchKey:
+            return Response({"error": "File not found in S3"}, status=status.HTTP_404_NOT_FOUND)
