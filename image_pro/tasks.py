@@ -144,8 +144,11 @@ def delete_expired_images():
     expired_images = Image.objects.filter(
         download_expires_at__lte=now
     )
+    count = expired_images.count()
+    print(f"[delete_expired_images] Found {count} expired images at {now}")
 
     for img in expired_images:
+        print(f"[delete_expired_images] Deleting image {img.id}")
 
         if img.original_image:
             img.original_image.delete(save=False)
