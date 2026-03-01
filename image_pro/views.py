@@ -15,6 +15,7 @@ from .utils import mark_download_expiry
 class ImageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     queryset = Image.objects.all()
+    http_method_names = ["get", "post"]
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -32,7 +33,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         #none for anonymous users
         return Image.objects.none()
     
-    
+
     def get_object(self):
         """
         Fetch an image for detail/download.
