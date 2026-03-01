@@ -165,7 +165,7 @@ class ImageUploadSerializer(serializers.ModelSerializer):
             user=request.user if request.user.is_authenticated else None,
             is_anonymous=not request.user.is_authenticated,
             status="pending",
-            download_expires_at=timezone.now() + timedelta(hours=1),  #auto expiry in 1 hour
+            download_expires_at=timezone.now() + timedelta(hours=24),  #auto expiry in 24 hours
             **validated_data
         )
         for op_data in operations_data:
