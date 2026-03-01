@@ -53,7 +53,7 @@ def process_image_task(image_id):
         ])
 
     
-        img = PILImage.open(image_obj.original_image.path)
+        img = PILImage.open(image_obj.original_image)
         operations = image_obj.operations.all().order_by("created_at")
 
         quality = 85  # default quality

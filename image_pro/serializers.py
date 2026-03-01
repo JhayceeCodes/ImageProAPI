@@ -52,6 +52,7 @@ class ImageOperationSerializer(serializers.ModelSerializer):
 
 
 class ImageUploadSerializer(serializers.ModelSerializer):
+    original_image = serializers.ImageField(write_only=True) 
     operations = serializers.CharField(write_only=True)
     detail_url = serializers.SerializerMethodField()
 
@@ -66,7 +67,7 @@ class ImageUploadSerializer(serializers.ModelSerializer):
             "detail_url",
             "created_at",
         ]
-        read_only_fields = ["id", "status", "created_at", "detail_url"]
+        read_only_fields = ["id", "status", "created_at", "detail_url", "image_format"]
     
     def get_detail_url(self, obj):
         request = self.context.get("request")
@@ -75,6 +76,60 @@ class ImageUploadSerializer(serializers.ModelSerializer):
             kwargs={"pk": obj.pk},
             request=request
         )
+    
+
+    def validate(self, data):
+        request = self.context["request"]
+        image_file = data.get("original_image")
+        operations = data.get("operations", [])
+
+        #auto-detect image format
+        if image_file:
+            try:
+                pil_image = PILImage.open(image_file)
+                format_detected = pil_image.format.lower()
+            except Exception:
+                raise serializers.ValidationError("Invalid image file.")
+
+            #convert jpeg to jpg
+            if format_detected == "jpeg":
+                format_detected = "jpg"
+
+            allowed_formats = ["jpg", "png", "webp"]
+            if format_detected not in allowed_formats:
+                raise serializers.ValidationError(
+                    f"Unsupported image format '{format_detected}'. Allowed: {', '.join(allowed_formats)}"
+                )
+
+            data["image_format"] = format_detected 
+
+        #file size
+        max_size = 10 * 1024 * 1024 if request.user.is_authenticated else 2 * 1024 * 1024
+        if image_file and image_file.size > max_size:
+            raise serializers.ValidationError(
+                f"File size exceeds allowed limit ({max_size // (1024*1024)}MB)."
+            )
+
+        #compression quality
+        for op in operations:
+            if op["operation_type"] == "compress":
+                quality = op["parameters"].get("quality")
+                if request.user.is_authenticated:
+                    if quality < 10 or quality > 95:
+                        raise serializers.ValidationError(
+                            "Authenticated users: quality must be 10-95"
+                        )
+                else:
+                    if quality < 40 or quality > 80:
+                        raise serializers.ValidationError(
+                            "Anonymous users: quality must be 40-80"
+                        )
+
+        #operation limit for anonymous users
+        if not request.user.is_authenticated and len(operations) > 2:
+            raise serializers.ValidationError("Anonymous users can only perform 2 operations")
+
+        return data
 
     def validate_operations(self, value):
         try:
@@ -101,36 +156,7 @@ class ImageUploadSerializer(serializers.ModelSerializer):
 
         return validated_operations
 
-    def validate(self, data):
-        request = self.context["request"]
-        operations = data.get("operations", [])
-        image_file = data.get("original_image")
-
-        # File size
-        if image_file:
-            max_size = 10 * 1024 * 1024 if request.user.is_authenticated else 2 * 1024 * 1024
-            if image_file.size > max_size:
-                raise serializers.ValidationError(
-                    f"File size exceeds allowed limit ({max_size // (1024 * 1024)}MB)."
-                )
-
-        # Compression quality
-        for op in operations:
-            if op["operation_type"] == "compress":
-                quality = op["parameters"].get("quality")
-                if request.user.is_authenticated:
-                    if quality < 10 or quality > 95:
-                        raise serializers.ValidationError("Authenticated users: quality must be 10-95")
-                else:
-                    if quality < 40 or quality > 80:
-                        raise serializers.ValidationError("Anonymous users: quality must be 40-80")
-
-        # Anonymous users operation limit
-        if not request.user.is_authenticated and len(operations) > 2:
-            raise serializers.ValidationError("Anonymous users can only perform 2 operations")
-
-        return data
-
+    
     def create(self, validated_data):
         operations_data = validated_data.pop("operations", [])
         request = self.context["request"]
@@ -139,7 +165,7 @@ class ImageUploadSerializer(serializers.ModelSerializer):
             user=request.user if request.user.is_authenticated else None,
             is_anonymous=not request.user.is_authenticated,
             status="pending",
-            download_expires_at=timezone.now() + timedelta(hours=24),  #auto expiry in 24hrs
+            download_expires_at=timezone.now() + timedelta(hours=1),  #auto expiry in 1 hour
             **validated_data
         )
         for op_data in operations_data:
@@ -154,6 +180,7 @@ class ImageUploadSerializer(serializers.ModelSerializer):
 
         return image
 
+
 class ImageDetailSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField()
     seconds_remaining = serializers.SerializerMethodField()
@@ -162,7 +189,6 @@ class ImageDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "status",
-            "image_format",
             "estimated_ready_at",
             "seconds_remaining",
             "download_url",

@@ -2,8 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from django.http import FileResponse
 from django.utils import timezone
+from django.core.files.storage import default_storage
 from datetime import timedelta
 from .models import Image
 from .serializers import ImageUploadSerializer, ImageDetailSerializer
@@ -28,7 +28,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=["get"])
     def download(self, request, pk=None):
-        image = get_object_or_404(Image, pk=pk)
+        image = get_object_or_404(self.get_queryset(), pk=pk)
         
         if not image.is_anonymous:
             if request.user != image.user:
@@ -57,7 +57,8 @@ class ImageViewSet(viewsets.ModelViewSet):
             image.download_expires_at = now + timedelta(minutes=5)
             image.save(update_fields=["download_expires_at"])
 
-        return FileResponse(
-            image.processed_image.open(),
-            as_attachment=True
-        )
+        signed_url = image.processed_image.url
+
+        return Response({
+            "download_url": signed_url
+        })
