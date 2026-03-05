@@ -2,14 +2,18 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()
+]
 
 INSTALLED_APPS += ["storages"]
 
 
 FRONTEND_URLS = os.getenv("FRONTEND_URLS", "")
-CORS_ALLOWED_ORIGINS = [url.strip() for url in FRONTEND_URLS.split(",")]
-
+CORS_ALLOWED_ORIGINS = [
+    url.strip() for url in FRONTEND_URLS.split(",") if url.strip()
+]
 # Security
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
