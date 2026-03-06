@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="max-w-5xl mx-auto px-6 py-16">
+
+<h1 class="text-4xl font-bold mb-6">
+ImageProAPI Documentation
+</h1>
+
+<p class="text-gray-600 mb-10">
+ImageProAPI is a REST API that allows clients to upload images and apply
+processing operations such as resizing, compression, filters, and format
+conversion. Images are processed asynchronously and can be downloaded once
+processing is complete.
+</p>
+
+
+
+<!-- AUTHENTICATION -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-4">
+Authentication
+</h2>
+
+<p class="text-gray-600 mb-4">
+This API uses <b>JWT (JSON Web Tokens)</b> for authentication.
+Authenticated users can store and retrieve their processed images.
+Anonymous users can upload images but with stricter limits.
+</p>
+
+<h3 class="font-semibold mb-2">Endpoints</h3>
+
+<ul class="list-disc ml-6 text-gray-600 space-y-1">
+<li><b>POST /accounts/register/</b> — Create a new user account</li>
+<li><b>POST /accounts/login/</b> — Obtain access and refresh tokens</li>
+<li><b>POST /accounts/refresh/</b> — Refresh access token</li>
+<li><b>POST /accounts/logout/</b> — Invalidate refresh token</li>
+</ul>
+
+<h3 class="font-semibold mt-4 mb-2">Authorization Header</h3>
+
+<pre class="bg-gray-100 p-4 rounded text-sm">
+Authorization: Bearer &lt;access_token&gt;
+</pre>
+
+</div>
+
+
+
+<!-- RATE LIMITING -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-4">
+Rate Limiting
+</h2>
+
+<p class="text-gray-600 mb-4">
+To prevent abuse and ensure fair usage, the API enforces global request limits.
+</p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>Authenticated users:</b> 20 requests per minute</li>
+<li><b>Anonymous users:</b> 5 requests per minute</li>
+</ul>
+
+</div>
+
+
+
+<!-- IMAGE UPLOAD -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-3">
+POST /api/images/
+</h2>
+
+<p class="text-gray-600 mb-4">
+Uploads an image and applies processing operations. The image will be processed
+asynchronously in the background.
+</p>
+
+<h3 class="font-semibold mb-2">Parameters</h3>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>original_image</b> – Image file (jpg, png, webp)</li>
+<li><b>operations</b> – JSON describing the transformations</li>
+</ul>
+
+<h3 class="font-semibold mt-4 mb-2">Example Request</h3>
+
+<pre class="bg-gray-100 p-4 rounded text-sm">
+{
+ "operations": [
+  {
+   "operation_type": "resize",
+   "parameters": {
+     "width": 300,
+     "height": 300
+   }
+  },
+  {
+   "operation_type": "compress",
+   "parameters": {
+     "quality": 80
+   }
+  }
+ ]
+}
+</pre>
+
+</div>
+
+
+
+<!-- IMAGE LIST -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-3">
+GET /api/images/
+</h2>
+
+<p class="text-gray-600 mb-3">
+Returns all images uploaded by the authenticated user.
+</p>
+
+<p class="text-gray-600">
+This endpoint requires authentication.
+</p>
+
+</div>
+
+
+
+<!-- IMAGE DETAIL -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-3">
+GET /api/images/{uuid}/
+</h2>
+
+<p class="text-gray-600 mb-3">
+Returns detailed information about a specific uploaded image including:
+</p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li>Processing status</li>
+<li>Image format</li>
+<li>Creation timestamp</li>
+<li>Download availability</li>
+</ul>
+
+</div>
+
+
+
+<!-- DOWNLOAD -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-3">
+GET /api/images/{uuid}/download/
+</h2>
+
+<p class="text-gray-600 mb-3">
+Downloads the processed image if processing has completed and the file has not expired.
+</p>
+
+</div>
+
+
+
+<!-- EXPIRATION RULES -->
+
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+
+<h2 class="text-2xl font-semibold mb-4">
+Image Expiration Policy
+</h2>
+
+<p class="text-gray-600 mb-4">
+Uploaded images have a limited download window to conserve storage resources.
+</p>
+
+<h3 class="font-semibold mb-2">Initial Expiry</h3>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>Authenticated users:</b> 1 hour</li>
+<li><b>Anonymous users:</b> 10 minutes</li>
+</ul>
+
+<h3 class="font-semibold mt-4 mb-2">After Download</h3>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>Authenticated users:</b> download remains available for 5 minutes</li>
+<li><b>Anonymous users:</b> download remains available for 20 seconds</li>
+</ul>
+
+<p class="text-gray-600 mt-3">
+After this period, the download link will expire and the image may be removed from storage.
+</p>
+
+</div>
+
+
+
+<!-- SWAGGER LINK -->
+
+<div class="mt-10">
+
+<a href="{% url 'swagger-ui' %}"
+   class="text-blue-600 font-semibold hover:underline">
+View Interactive Swagger Documentation →
+</a>
+
+</div>
+
+
+</div>
+
+{% endblock %}

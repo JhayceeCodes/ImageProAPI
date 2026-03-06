@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     'core',
     'accounts',
     'image_pro',
@@ -101,7 +103,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-#DRF AUTH CONFIG
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -109,7 +111,8 @@ REST_FRAMEWORK = {
 
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication"
-    ]
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 
@@ -130,3 +133,17 @@ CELERY_TASK_SERIALIZER = "json"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ImageProAPI",
+    "DESCRIPTION": "API for uploading and processing images (resize, compress, convert, filter).",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+
+    "CONTACT": {
+        "name": "ImageProAPI",
+        "url": "https://github.com/JhayceeCodes", #placeholder
+    },
+
+    "COMPONENT_SPLIT_REQUEST": True,
+}
