@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  web:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_TYPE=web
+    restart: unless-stopped
+
+  celery:
+    build: .
+    command: celery -A config worker -l info --concurrency=4
+    env_file:
+      - .env
+    environment:
+      - SERVICE_TYPE=worker
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info
+    env_file:
+      - .env
+    environment:
+      - SERVICE_TYPE=worker
+      - CELERY_ROLE=beat
+    restart: unless-stopped
