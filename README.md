@@ -1,15 +1,53 @@
 # ImageProAPI
 
-**ImageProAPI** is an Image Processing API designed to allow clients to upload images and apply various transformations through simple RESTful endpoints. The API supports operations such as image resizing, format conversion, filter application, and metadata extraction. Built with Django, it focuses on performance, security, and scalability, making it suitable for integration into web, mobile, or data-processing applications.
+**ImageProAPI** is a scalable image processing API that allows clients to upload images and apply multiple transformations through RESTful endpoints.
+
+The API supports operations such as resizing, compression, format conversion, and filtering. Image processing tasks are handled asynchronously to ensure the API remains responsive even during heavy workloads.
+
+Built with **Django and Django REST Framework**, ImageProAPI focuses on **performance, security, and scalability**, making it suitable for integration with web applications, mobile apps, or data processing pipelines.
+
 
 ---
 
 ## Features
+- Image transformations using **Pillow**
+  - Resize
+  - Compression
+  - Filters
+  - Format conversion
+- **Asynchronous image processing** using Celery workers
+- **Redis-backed task queue**
+- **AWS S3 storage** for media files and static assets
+- **Dockerized environment** for consistent development and deployment
+- **API rate limiting** to prevent abuse and improve service stability
+- **JWT authentication** for secure API access
+- **Automatic image cleanup** after expiry
+- Modular API design suitable for integration into web or mobile applications
+- API rate limiting implemented using Django REST Framework throttling
 
-- Image processing with Pillow (compression, filters, resize, and format conversion)  
-- Asynchronous image processing using Celery  
-- Automatic deletion of images after download expiry or inactivity  
-- JWT-based authentication for secure API access  
+---
+
+# Architecture Overview
+![System Architecture](architecture.png)
+
+The system is designed to prevent heavy image operations from blocking API requests.
+
+1. Client uploads an image and specifies operations
+2. API stores the image and operation instructions
+3. A **Celery worker processes the image asynchronously**
+4. A **Celery worker retrieves the task from Redis and processes the image**
+5. The processed image is stored back in **S3**
+6. Clients can retrieve the processing status and download the image
+7. **Celery Beat schedules periodic cleanup tasks**
+
+**Components**
+
+- Django REST API
+- Celery workers for background processing
+- Redis as message broker
+- AWS S3 for media and static files storage
+- Docker for containerized development and deployment
+- Pillow for image transformations
 
 ---
 
@@ -45,15 +83,32 @@
 
 7. Start Celery worker (ensure Redis is running):
     ```bash
-    celery -A <project_name> worker -l info
+    celery -A config worker -l info
     ```
 
 8. Start Celery beat (for scheduled tasks like auto-deletion):
     ```bash
-    celery -A <project_name> beat -l info
+    celery -A config beat -l info
     ```
 
-Future plans: Support Docker for easier setup and deployment.
+## Running with Docker
+
+To run the project using Docker:
+
+```bash
+docker-compose up --build
+```
+
+This will start:
+- Django API
+- Redis
+- Celery Worker
+- Celery Beat
+
+Once running, the API will be available at:
+```bash
+http://localhost:8000
+```
 
 ## API Endpoints
 ### Authentication
@@ -68,21 +123,26 @@ Future plans: Support Docker for easier setup and deployment.
 | Method | Endpoint                            | Description       |
 | ------ | ----------------------------------- | ----------------- |
 | POST   | `/api/images/`               | Upload a new image with operations (as JSON).   |
-| POST   | `/api/images/{id}/`               | Retrieve image details including status and download URL (if ready).   |
-| POST   | `/api/images/{id}download/`                  | Download the processed image. Only available if status = completed.
+| GET   | `/api/images/`               | List user images. |
+| GET   | `/api/images/{id}/`               | Retrieve image details including status and download URL (if ready).   |
+| GET   | `/api/images/{id}download/`                  | Download the processed image. Only available if status = completed.
    |
 
-## Usage Instructions
 
-- Upload an image via `/api/images/` endpoint along with a JSON array of operations: resize, compress, filter, or convert.
+## Usage Flow
 
--  Access the image details via `/api/images/{id}/` endpoint.
+- Upload an image with processing operations.
 
-- Once the processing status is "completed", a download link becomes available.
+- The API queues the request for background processing.
 
-- Download the processed image via `/api/images/{id}/download/`.
+- A Celery worker processes the image.
 
-## Celery Tasks and Background Processing
+- Client polls the image status endpoint.
+
+- When processing is complete, a download link becomes available.
+
+
+## Background Processing
 
 - Image Processing: All image transformations are handled asynchronously by Celery workers to prevent blocking the API.
 
@@ -91,23 +151,19 @@ Future plans: Support Docker for easier setup and deployment.
 - Redis is used as the Celery broker.
 
 
-## Notes on Expiry
-
-- Images are automatically deleted 5 minutes after the first download.
-
-- If an image is not downloaded at all, it is automatically deleted after 24 hours.
-
 
 ## Technologies Used
 
+- Python
 - Django
-
 - Django REST Framework
-
-- Pillow
-
 - Celery
-
 - Redis
+- Pillow
+- Docker
+- AWS S3
 
 
+## License
+
+This project is licensed under the MIT License.
