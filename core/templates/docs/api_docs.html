@@ -93,25 +93,153 @@ asynchronously in the background.
 
 <h3 class="font-semibold mt-4 mb-2">Example Request</h3>
 
-<pre class="bg-gray-100 p-4 rounded text-sm">
+<h3 class="font-semibold mt-6 mb-3">Supported Operations</h3>
+
+<p class="text-gray-600 mb-4">
+The <b>operations</b> field accepts a list of image transformations that will
+be executed sequentially. Each operation contains an <b>operation_type</b> and
+a set of <b>parameters</b>.
+</p>
+
+
+<!-- RESIZE -->
+
+<div class="bg-gray-50 p-4 rounded mb-4">
+<h4 class="font-semibold mb-2">Resize</h4>
+
+<p class="text-gray-600 mb-2">
+Resizes the image to a specific width and height.
+</p>
+
+<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>resize</code></p>
+
+<p class="text-gray-600 mb-1"><b>parameters:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>width</b> – Target width in pixels</li>
+<li><b>height</b> – Target height in pixels</li>
+</ul>
+
+<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
 {
- "operations": [
-  {
-   "operation_type": "resize",
-   "parameters": {
-     "width": 300,
-     "height": 300
-   }
-  },
-  {
-   "operation_type": "compress",
-   "parameters": {
-     "quality": 80
-   }
-  }
- ]
+ "operation_type": "resize",
+ "parameters": {
+   "width": 300,
+   "height": 300
+ }
 }
 </pre>
+</div>
+
+
+
+<!-- COMPRESS -->
+
+<div class="bg-gray-50 p-4 rounded mb-4">
+<h4 class="font-semibold mb-2">Compress</h4>
+
+<p class="text-gray-600 mb-2">
+Reduces file size by lowering image quality.
+</p>
+
+<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>compress</code></p>
+
+<p class="text-gray-600 mb-1"><b>parameters:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>quality</b> – Compression level (integer)</li>
+</ul>
+
+<p class="text-gray-600 mt-2"><b>Quality limits:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>Authenticated users:</b> 10 – 95</li>
+<li><b>Anonymous users:</b> 40 – 80</li>
+</ul>
+
+<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
+{
+ "operation_type": "compress",
+ "parameters": {
+   "quality": 80
+ }
+}
+</pre>
+</div>
+
+
+
+<!-- CONVERT -->
+
+<div class="bg-gray-50 p-4 rounded mb-4">
+<h4 class="font-semibold mb-2">Convert</h4>
+
+<p class="text-gray-600 mb-2">
+Converts the image into another supported format.
+</p>
+
+<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>convert</code></p>
+
+<p class="text-gray-600 mb-1"><b>parameters:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>format</b> – Target format</li>
+</ul>
+
+<p class="text-gray-600 mt-2"><b>Allowed formats:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li>jpg</li>
+<li>png</li>
+<li>webp</li>
+</ul>
+
+<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
+{
+ "operation_type": "convert",
+ "parameters": {
+   "format": "webp"
+ }
+}
+</pre>
+</div>
+
+
+
+<!-- FILTER -->
+
+<div class="bg-gray-50 p-4 rounded mb-4">
+<h4 class="font-semibold mb-2">Filter</h4>
+
+<p class="text-gray-600 mb-2">
+Applies visual filters to the image.
+</p>
+
+<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>filter</code></p>
+
+<p class="text-gray-600 mb-1"><b>parameters:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li><b>type</b> – Filter type</li>
+</ul>
+
+<p class="text-gray-600 mt-2"><b>Supported filters:</b></p>
+
+<ul class="list-disc ml-6 text-gray-600">
+<li>grayscale</li>
+<li>blur</li>
+<li>sharpen</li>
+</ul>
+
+<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
+{
+ "operation_type": "filter",
+ "parameters": {
+   "type": "grayscale"
+ }
+}
+</pre>
+</div>
 
 </div>
 
