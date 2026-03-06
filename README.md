@@ -167,7 +167,8 @@ http://localhost:8000
 
 - Webhook support for processing completion
 - Batch image processing
-- API request analytics
+- API request analytics and usage metrics
+- API key authentication and client access management
 
 
 ## License
