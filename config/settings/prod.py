@@ -10,10 +10,13 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS += ["storages"]
 
 
-FRONTEND_URLS = os.getenv("FRONTEND_URLS", "")
-CORS_ALLOWED_ORIGINS = [
-    url.strip() for url in FRONTEND_URLS.split(",") if url.strip()
-]
+# FRONTEND_URLS = os.getenv("FRONTEND_URLS", "")
+# CORS_ALLOWED_ORIGINS = [
+#     url.strip() for url in FRONTEND_URLS.split(",") if url.strip()
+# ]
+CORS_ALLOW_ALL_ORIGINS = True
+
+
 # Security
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
