@@ -125,8 +125,7 @@ http://localhost:8000
 | POST   | `/api/images/`               | Upload a new image with operations (as JSON).   |
 | GET   | `/api/images/`               | List user images. |
 | GET   | `/api/images/{id}/`               | Retrieve image details including status and download URL (if ready).   |
-| GET   | `/api/images/{id}download/`                  | Download the processed image. Only available if status = completed.
-   |
+| GET   | `/api/images/{id}download/`                  | Download the processed image. Only available if status = completed.|
 
 
 ## Usage Flow
@@ -162,6 +161,13 @@ http://localhost:8000
 - Pillow
 - Docker
 - AWS S3
+
+
+## Future Improvements
+
+- Webhook support for processing completion
+- Batch image processing
+- API request analytics
 
 
 ## License
