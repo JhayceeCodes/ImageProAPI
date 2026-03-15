@@ -6,7 +6,7 @@
     <div class="max-w-3xl">
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-orange-600">Playground</p>
         <h1 class="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
-            Build, authenticate, and submit requests without hand-writing JSON
+            Build, authenticate, and submit requests
         </h1>
         <p class="mt-6 text-lg leading-8 text-slate-600">
             This page wraps the core flow in one client: optionally register, log in to get an access token,
@@ -211,8 +211,25 @@
             <div class="mt-4 overflow-x-auto rounded-md bg-slate-950 p-5">
 <pre id="response-preview" class="text-sm leading-7 text-slate-100">No request submitted yet.</pre>
             </div>
+            <div class="mt-4 hidden" id="html-preview-actions">
+                <button
+                    type="button"
+                    id="toggle-html-preview"
+                    class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
+                >
+                    Preview HTML response
+                </button>
+            </div>
+            <div id="html-response-container" class="mt-4 hidden">
+                <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rendered HTML response</div>
+                <iframe
+                    id="html-response-frame"
+                    title="Rendered HTML response"
+                    class="h-[28rem] w-full rounded-md border border-line bg-white"
+                ></iframe>
+            </div>
             <p class="mt-3 text-xs leading-6 text-slate-500">
-                HTML responses are shown as escaped text so server error pages do not break the UI.
+                JSON and text responses appear above. Trusted HTML responses are also rendered below in an isolated frame.
             </p>
         </section>
 
@@ -239,6 +256,10 @@
         const operationCount = document.getElementById("operation-count");
         const responseStatus = document.getElementById("response-status");
         const responsePreview = document.getElementById("response-preview");
+        const htmlPreviewActions = document.getElementById("html-preview-actions");
+        const toggleHtmlPreviewButton = document.getElementById("toggle-html-preview");
+        const htmlResponseContainer = document.getElementById("html-response-container");
+        const htmlResponseFrame = document.getElementById("html-response-frame");
 
         const uploadFields = {
             originalImage: document.getElementById("original-image"),
@@ -273,6 +294,22 @@
             }
 
             responseStatus.textContent = message;
+        }
+
+        function summarizeHtmlDocument(html) {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const title = doc.querySelector("title")?.textContent?.trim();
+            const heading = doc.querySelector("h1, h2, h3")?.textContent?.trim();
+            const bodyText = (doc.body?.innerText || "")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 600);
+
+            return {
+                title: title || "HTML response received",
+                heading: heading || "",
+                bodyText: bodyText || "The server returned an HTML document instead of a JSON API response.",
+            };
         }
 
         function buildOperations() {
@@ -348,14 +385,28 @@
         }
 
         function showResponsePayload(result) {
+            htmlPreviewActions.classList.add("hidden");
+            htmlResponseContainer.classList.add("hidden");
+            htmlResponseFrame.srcdoc = "";
+            toggleHtmlPreviewButton.textContent = "Preview HTML response";
+
             if (result.kind === "json") {
                 responsePreview.textContent = JSON.stringify(result.body, null, 2);
                 return;
             }
 
             if (result.kind === "html") {
-                responsePreview.textContent = result.body;
-                setResponseState("Received an HTML response, likely from an error page or non-API route.", "warning");
+                const summary = summarizeHtmlDocument(result.body);
+                responsePreview.textContent = [
+                    `HTML response received`,
+                    `Title: ${summary.title}`,
+                    summary.heading ? `Heading: ${summary.heading}` : null,
+                    "",
+                    summary.bodyText,
+                ].filter(Boolean).join("\n");
+                htmlResponseFrame.srcdoc = result.body;
+                htmlPreviewActions.classList.remove("hidden");
+                setResponseState("Received an HTML response. Use the preview button to inspect the full document.", "warning");
                 return;
             }
 
@@ -485,6 +536,17 @@
         resetUploadFormButton.addEventListener("click", () => {
             uploadForm.reset();
             updateOperationsPreview();
+            htmlPreviewActions.classList.add("hidden");
+            htmlResponseContainer.classList.add("hidden");
+            htmlResponseFrame.srcdoc = "";
+        });
+
+        toggleHtmlPreviewButton.addEventListener("click", () => {
+            const isHidden = htmlResponseContainer.classList.contains("hidden");
+            htmlResponseContainer.classList.toggle("hidden");
+            toggleHtmlPreviewButton.textContent = isHidden
+                ? "Hide HTML preview"
+                : "Preview HTML response";
         });
 
         updateOperationsPreview();
