@@ -20,6 +20,8 @@
     const imagePreviewContainer = document.getElementById("image-preview-container");
     const imagePreview = document.getElementById("image-preview");
     const downloadImageLink = document.getElementById("download-image-link");
+    const jobLoader = document.getElementById("job-loader");
+    const jobLoaderText = document.getElementById("job-loader-text");
 
     if (!uploadForm) {
         return;
@@ -43,6 +45,7 @@
         detailUrl: null,
         downloadUrl: null,
         previewObjectUrl: null,
+        pollTimer: null,
     };
 
     function setResponseState(message, kind) {
@@ -90,7 +93,29 @@
         }
     }
 
+    function stopAutoPolling() {
+        if (jobState.pollTimer) {
+            window.clearTimeout(jobState.pollTimer);
+            jobState.pollTimer = null;
+        }
+    }
+
+    function startAutoPolling(delayMs) {
+        stopAutoPolling();
+        jobState.pollTimer = window.setTimeout(async () => {
+            await syncJobResult();
+        }, delayMs || 2500);
+    }
+
+    function setLoaderState(isVisible, message) {
+        jobLoader.classList.toggle("hidden", !isVisible);
+        if (message) {
+            jobLoaderText.textContent = message;
+        }
+    }
+
     function resetJobState() {
+        stopAutoPolling();
         clearPreviewObjectUrl();
         jobState.id = null;
         jobState.detailUrl = null;
@@ -105,6 +130,7 @@
         imagePreview.removeAttribute("src");
         downloadImageLink.classList.add("hidden");
         downloadImageLink.removeAttribute("href");
+        setLoaderState(false);
     }
 
     function setJobBadge(status) {
@@ -128,6 +154,32 @@
         } catch (_) {
             return url;
         }
+    }
+
+    function mimeTypeFromFilename(filename) {
+        const lower = (filename || "").toLowerCase();
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        return "";
+    }
+
+    function filenameFromContentDisposition(value) {
+        if (!value) {
+            return "";
+        }
+        const utfMatch = value.match(/filename\*=UTF-8''([^;]+)/i);
+        if (utfMatch) {
+            return decodeURIComponent(utfMatch[1]);
+        }
+        const plainMatch = value.match(/filename="?([^"]+)"?/i);
+        return plainMatch ? plainMatch[1] : "";
     }
 
     function buildOperations() {
@@ -277,13 +329,22 @@
                 return;
             }
 
-            const blob = await response.blob();
+            const contentDisposition = response.headers.get("content-disposition") || "";
+            const inferredFilename = filenameFromContentDisposition(contentDisposition) || "processed-image";
+            const originalBlob = await response.blob();
+            const inferredMime = originalBlob.type && originalBlob.type !== "application/octet-stream"
+                ? originalBlob.type
+                : mimeTypeFromFilename(inferredFilename);
+            const blob = inferredMime
+                ? new Blob([originalBlob], { type: inferredMime })
+                : originalBlob;
+
             clearPreviewObjectUrl();
             jobState.previewObjectUrl = URL.createObjectURL(blob);
             imagePreview.src = jobState.previewObjectUrl;
             imagePreviewContainer.classList.remove("hidden");
             downloadImageLink.href = jobState.previewObjectUrl;
-            downloadImageLink.download = `processed-image.${blob.type.split("/")[1] || "bin"}`;
+            downloadImageLink.download = inferredFilename;
             downloadImageLink.classList.remove("hidden");
         } catch (_) {
             setResponseState("The image is ready, but the preview request failed.", "warning");
@@ -325,24 +386,34 @@
             setJobBadge(body.status);
 
             if (body.status === "completed" && jobState.downloadUrl) {
+                stopAutoPolling();
+                setLoaderState(false);
                 jobSummary.textContent = "The image has finished processing. Preview and download are now available.";
                 await fetchPreviewImage();
             } else if (body.status === "processing") {
                 clearPreviewObjectUrl();
                 imagePreviewContainer.classList.add("hidden");
                 downloadImageLink.classList.add("hidden");
+                setLoaderState(true, body.seconds_remaining != null
+                    ? `Still processing. Checking again automatically. Estimated time remaining: ${body.seconds_remaining} seconds.`
+                    : "Still processing. Checking again automatically...");
                 jobSummary.textContent = body.seconds_remaining != null
                     ? `The image is still processing. Estimated time remaining: ${body.seconds_remaining} seconds.`
                     : "The image is still processing.";
+                startAutoPolling(2500);
             } else if (body.status === "pending") {
                 clearPreviewObjectUrl();
                 imagePreviewContainer.classList.add("hidden");
                 downloadImageLink.classList.add("hidden");
+                setLoaderState(true, "Queued and waiting. Checking again automatically...");
                 jobSummary.textContent = "The upload has been accepted and is waiting to be processed.";
+                startAutoPolling(2500);
             } else if (body.status === "failed") {
+                stopAutoPolling();
                 clearPreviewObjectUrl();
                 imagePreviewContainer.classList.add("hidden");
                 downloadImageLink.classList.add("hidden");
+                setLoaderState(false);
                 jobSummary.textContent = "The image job failed during processing.";
             }
 
@@ -412,6 +483,7 @@
                     setJobBadge(result.body.status || "pending");
                     jobSummary.textContent = "Upload request accepted. Poll the job status to track processing and unlock preview/download.";
                     setResponseState("Upload request accepted. Use the job result panel to poll status.", "success");
+                    setLoaderState(true, "Upload accepted. Checking status automatically...");
                     await syncJobResult(jobState.detailUrl);
                     return;
                 }

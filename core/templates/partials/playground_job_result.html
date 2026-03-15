@@ -37,6 +37,15 @@
             Download image
         </a>
     </div>
+    <div id="job-loader" class="mt-5 hidden rounded-md border border-line bg-slate-50 p-4">
+        <div class="flex items-center gap-3">
+            <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900"></span>
+            <div>
+                <p class="text-sm font-semibold text-slate-950">Waiting for processed image</p>
+                <p id="job-loader-text" class="text-sm text-slate-600">Checking status automatically...</p>
+            </div>
+        </div>
+    </div>
     <div id="image-preview-container" class="mt-5 hidden">
         <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Preview</div>
         <img id="image-preview" alt="Processed image preview" class="w-full rounded-md border border-line bg-slate-50 object-contain">
