@@ -45,6 +45,9 @@
                         <a href="{% url 'api-docs' %}" class="rounded-md px-4 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-accent/30">
                             Docs
                         </a>
+                        <a href="{% url 'playground' %}" class="rounded-md px-4 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-accent/30">
+                            Playground
+                        </a>
                         <a href="{% url 'swagger-ui' %}" class="rounded-md px-4 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-accent/30">
                             Swagger
                         </a>
@@ -70,6 +73,7 @@
                 <div class="flex flex-wrap gap-4">
                     <a href="{% url 'home' %}" class="transition hover:text-slate-900">Home</a>
                     <a href="{% url 'api-docs' %}" class="transition hover:text-slate-900">Documentation</a>
+                    <a href="{% url 'playground' %}" class="transition hover:text-slate-900">Playground</a>
                     <a href="{% url 'redoc' %}" class="transition hover:text-slate-900">ReDoc</a>
                 </div>
             </div>
