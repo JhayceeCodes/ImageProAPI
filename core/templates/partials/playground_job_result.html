@@ -1,0 +1,44 @@
+<section class="rounded-md border border-line bg-white p-6 shadow-soft">
+    <div class="flex items-center justify-between gap-3">
+        <h2 class="text-xl font-bold text-slate-950">Job result</h2>
+        <span id="job-status-badge" class="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">No job yet</span>
+    </div>
+    <p id="job-summary" class="mt-3 text-sm leading-7 text-slate-600">
+        Submit an upload to populate the job details, poll processing status, and preview the finished image.
+    </p>
+    <dl class="mt-4 space-y-3 text-sm text-slate-600">
+        <div>
+            <dt class="font-semibold text-slate-950">Image ID</dt>
+            <dd id="job-image-id" class="mt-1 break-all">-</dd>
+        </div>
+        <div>
+            <dt class="font-semibold text-slate-950">Detail URL</dt>
+            <dd id="job-detail-url" class="mt-1 break-all">-</dd>
+        </div>
+        <div>
+            <dt class="font-semibold text-slate-950">Download URL</dt>
+            <dd id="job-download-url" class="mt-1 break-all">-</dd>
+        </div>
+    </dl>
+    <div class="mt-5 flex flex-wrap gap-3">
+        <button
+            type="button"
+            id="poll-job-status"
+            class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
+        >
+            Poll status
+        </button>
+        <a
+            id="download-image-link"
+            href="#"
+            download="processed-image"
+            class="hidden rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+        >
+            Download image
+        </a>
+    </div>
+    <div id="image-preview-container" class="mt-5 hidden">
+        <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Preview</div>
+        <img id="image-preview" alt="Processed image preview" class="w-full rounded-md border border-line bg-slate-50 object-contain">
+    </div>
+</section>
