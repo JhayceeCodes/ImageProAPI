@@ -1,355 +1,202 @@
 {% extends "base.html" %}
+{% block title %}ImageProAPI | Usage Guide{% endblock %}
 
 {% block content %}
-
-<div class="max-w-5xl mx-auto px-6 py-16">
-
-<h1 class="text-4xl font-bold mb-6">
-ImageProAPI Documentation
-</h1>
-
-<p class="text-gray-600 mb-10">
-ImageProAPI is a REST API that allows clients to upload images and apply
-processing operations such as resizing, compression, filters, and format
-conversion. Images are processed asynchronously and can be downloaded once
-processing is complete.
-</p>
-
-
-
-<!-- AUTHENTICATION -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-4">
-Authentication
-</h2>
-
-<p class="text-gray-600 mb-4">
-This API uses <b>JWT (JSON Web Tokens)</b> for authentication.
-Authenticated users can store and retrieve their processed images.
-Anonymous users can upload images but with stricter limits.
-</p>
-
-<h3 class="font-semibold mb-2">Endpoints</h3>
-
-<ul class="list-disc ml-6 text-gray-600 space-y-1">
-<li><b>POST /accounts/register/</b> — Create a new user account</li>
-<li><b>POST /accounts/login/</b> — Obtain access and refresh tokens</li>
-<li><b>POST /accounts/refresh/</b> — Refresh access token</li>
-<li><b>POST /accounts/logout/</b> — Invalidate refresh token</li>
-</ul>
-
-<h3 class="font-semibold mt-4 mb-2">Authorization Header</h3>
-
-<pre class="bg-gray-100 p-4 rounded text-sm">
-Authorization: Bearer &lt;access_token&gt;
-</pre>
-
-</div>
-
-
-
-<!-- RATE LIMITING -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-4">
-Rate Limiting
-</h2>
-
-<p class="text-gray-600 mb-4">
-To prevent abuse and ensure fair usage, the API enforces global request limits.
-</p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>Authenticated users:</b> 20 requests per minute</li>
-<li><b>Anonymous users:</b> 5 requests per minute</li>
-</ul>
-
-</div>
-
-
-
-<!-- IMAGE UPLOAD -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-3">
-POST /api/images/
-</h2>
-
-<p class="text-gray-600 mb-4">
-Uploads an image and applies processing operations. The image will be processed
-asynchronously in the background.
-</p>
-
-<h3 class="font-semibold mb-2">Parameters</h3>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>original_image</b> – Image file (jpg, png, webp)</li>
-<li><b>operations</b> – JSON describing the transformations</li>
-</ul>
-
-<h3 class="font-semibold mt-4 mb-2">Example Request</h3>
-
-<h3 class="font-semibold mt-6 mb-3">Supported Operations</h3>
-
-<p class="text-gray-600 mb-4">
-The <b>operations</b> field accepts a list of image transformations that will
-be executed sequentially. Each operation contains an <b>operation_type</b> and
-a set of <b>parameters</b>.
-</p>
-
-
-<!-- RESIZE -->
-
-<div class="bg-gray-50 p-4 rounded mb-4">
-<h4 class="font-semibold mb-2">Resize</h4>
-
-<p class="text-gray-600 mb-2">
-Resizes the image to a specific width and height.
-</p>
-
-<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>resize</code></p>
-
-<p class="text-gray-600 mb-1"><b>parameters:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>width</b> – Target width in pixels</li>
-<li><b>height</b> – Target height in pixels</li>
-</ul>
-
-<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
-{
- "operation_type": "resize",
- "parameters": {
-   "width": 300,
-   "height": 300
- }
-}
-</pre>
-</div>
-
-
-
-<!-- COMPRESS -->
-
-<div class="bg-gray-50 p-4 rounded mb-4">
-<h4 class="font-semibold mb-2">Compress</h4>
-
-<p class="text-gray-600 mb-2">
-Reduces file size by lowering image quality.
-</p>
-
-<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>compress</code></p>
-
-<p class="text-gray-600 mb-1"><b>parameters:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>quality</b> – Compression level (integer)</li>
-</ul>
-
-<p class="text-gray-600 mt-2"><b>Quality limits:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>Authenticated users:</b> 10 – 95</li>
-<li><b>Anonymous users:</b> 40 – 80</li>
-</ul>
-
-<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
-{
- "operation_type": "compress",
- "parameters": {
-   "quality": 80
- }
-}
-</pre>
-</div>
-
-
-
-<!-- CONVERT -->
-
-<div class="bg-gray-50 p-4 rounded mb-4">
-<h4 class="font-semibold mb-2">Convert</h4>
-
-<p class="text-gray-600 mb-2">
-Converts the image into another supported format.
-</p>
-
-<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>convert</code></p>
-
-<p class="text-gray-600 mb-1"><b>parameters:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>format</b> – Target format</li>
-</ul>
-
-<p class="text-gray-600 mt-2"><b>Allowed formats:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li>jpg</li>
-<li>png</li>
-<li>webp</li>
-</ul>
-
-<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
-{
- "operation_type": "convert",
- "parameters": {
-   "format": "webp"
- }
-}
-</pre>
-</div>
-
-
-
-<!-- FILTER -->
-
-<div class="bg-gray-50 p-4 rounded mb-4">
-<h4 class="font-semibold mb-2">Filter</h4>
-
-<p class="text-gray-600 mb-2">
-Applies visual filters to the image.
-</p>
-
-<p class="text-gray-600 mb-1"><b>operation_type:</b> <code>filter</code></p>
-
-<p class="text-gray-600 mb-1"><b>parameters:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>type</b> – Filter type</li>
-</ul>
-
-<p class="text-gray-600 mt-2"><b>Supported filters:</b></p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li>grayscale</li>
-<li>blur</li>
-<li>sharpen</li>
-</ul>
-
-<pre class="bg-gray-100 p-3 rounded text-sm mt-2">
-{
- "operation_type": "filter",
- "parameters": {
-   "type": "grayscale"
- }
-}
-</pre>
-</div>
-
-</div>
-
-
-
-<!-- IMAGE LIST -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-3">
-GET /api/images/
-</h2>
-
-<p class="text-gray-600 mb-3">
-Returns all images uploaded by the authenticated user.
-</p>
-
-<p class="text-gray-600">
-This endpoint requires authentication.
-</p>
-
-</div>
-
-
-
-<!-- IMAGE DETAIL -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-3">
-GET /api/images/{uuid}/
-</h2>
-
-<p class="text-gray-600 mb-3">
-Returns detailed information about a specific uploaded image including:
-</p>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li>Processing status</li>
-<li>Image format</li>
-<li>Creation timestamp</li>
-<li>Download availability</li>
-</ul>
-
-</div>
-
-
-
-<!-- DOWNLOAD -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-3">
-GET /api/images/{uuid}/download/
-</h2>
-
-<p class="text-gray-600 mb-3">
-Downloads the processed image if processing has completed and the file has not expired.
-</p>
-
-</div>
-
-
-
-<!-- EXPIRATION RULES -->
-
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-
-<h2 class="text-2xl font-semibold mb-4">
-Image Expiration Policy
-</h2>
-
-<p class="text-gray-600 mb-4">
-Uploaded images have a limited download window to conserve storage resources.
-</p>
-
-<h3 class="font-semibold mb-2">Initial Expiry</h3>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>Authenticated users:</b> 1 hour</li>
-<li><b>Anonymous users:</b> 10 minutes</li>
-</ul>
-
-<h3 class="font-semibold mt-4 mb-2">After Download</h3>
-
-<ul class="list-disc ml-6 text-gray-600">
-<li><b>Authenticated users:</b> download remains available for 5 minutes</li>
-<li><b>Anonymous users:</b> download remains available for 20 seconds</li>
-</ul>
-
-<p class="text-gray-600 mt-3">
-After this period, the download link will expire and the image may be removed from storage.
-</p>
-
-</div>
-
-
-
-<!-- SWAGGER LINK -->
-
-<div class="mt-10">
-
-<a href="{% url 'swagger-ui' %}"
-   class="text-blue-600 font-semibold hover:underline">
-View Interactive Swagger Documentation →
-</a>
-
-</div>
-
-
-</div>
-
+<section class="mx-auto max-w-7xl px-6 py-16">
+    <div class="max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-orange-600">Usage guide</p>
+        <h1 class="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
+            How to use ImageProAPI from registration to download
+        </h1>
+        <p class="mt-6 text-lg leading-8 text-slate-600">
+            ImageProAPI is built around an asynchronous workflow. Authentication is optional, but the
+            recommended path is to create an account, log in to get an access token, upload an image
+            with processing instructions, poll the image detail resource, and download the processed
+            output when the job completes.
+        </p>
+    </div>
+</section>
+
+<section class="mx-auto grid max-w-7xl gap-6 px-6 pb-10 lg:grid-cols-[0.85fr_1.15fr]">
+    <aside class="rounded-md border border-line bg-white p-6 shadow-soft">
+        <h2 class="text-lg font-bold text-slate-950">Recommended flow</h2>
+        <ol class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+            <li><span class="font-semibold text-slate-950">1.</span> Register a user account.</li>
+            <li><span class="font-semibold text-slate-950">2.</span> Log in and receive JWT tokens.</li>
+            <li><span class="font-semibold text-slate-950">3.</span> Upload an image plus an operations array.</li>
+            <li><span class="font-semibold text-slate-950">4.</span> Poll the image detail endpoint for status.</li>
+            <li><span class="font-semibold text-slate-950">5.</span> Download the processed image before expiry.</li>
+        </ol>
+
+        <div class="mt-6 rounded-md bg-slate-900 p-5 text-sm text-slate-200">
+            <p class="font-semibold text-white">Anonymous uploads exist</p>
+            <p class="mt-2">
+                Authentication is optional. You can upload without logging in, but the request is more
+                restricted: smaller file size, fewer operations, and tighter compression limits.
+            </p>
+        </div>
+    </aside>
+
+    <div class="space-y-6">
+        <article class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <h2 class="text-2xl font-bold text-slate-950">1. Authenticate first</h2>
+            <p class="mt-3 text-slate-600">
+                Authentication is optional, but registration and login are the best starting point because
+                they unlock the fuller upload flow and higher request limits.
+            </p>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Registration</h3>
+                    <p class="mt-2 text-sm leading-7 text-slate-600">
+                        Send <code>POST /accounts/register/</code> with <code>username</code>,
+                        <code>email</code>, and <code>password</code>.
+                    </p>
+                </div>
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Login</h3>
+                    <p class="mt-2 text-sm leading-7 text-slate-600">
+                        Send <code>POST /accounts/login/</code> with credentials to receive access and refresh tokens.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-5 overflow-x-auto rounded-md bg-slate-950 p-5 text-sm text-slate-100">
+<pre>Authorization: Bearer &lt;access_token&gt;</pre>
+            </div>
+        </article>
+
+        <article class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <h2 class="text-2xl font-bold text-slate-950">2. Upload an image job</h2>
+            <p class="mt-3 text-slate-600">
+                Uploads are sent to <code>POST /api/images/</code> as multipart form data. The request has
+                two important fields.
+            </p>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <div class="rounded-md border border-line p-5">
+                    <h3 class="font-semibold text-slate-950">original_image</h3>
+                    <p class="mt-2 text-sm leading-7 text-slate-600">
+                        The source image file. Supported formats are <code>jpg</code>, <code>png</code>, and <code>webp</code>.
+                    </p>
+                </div>
+                <div class="rounded-md border border-line p-5">
+                    <h3 class="font-semibold text-slate-950">operations</h3>
+                    <p class="mt-2 text-sm leading-7 text-slate-600">
+                        A JSON array describing the transformations to run in sequence.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-5 overflow-x-auto rounded-md bg-slate-950 p-5 text-sm text-slate-100">
+<pre>[
+  {"operation_type": "resize", "parameters": {"width": 1200, "height": 900}},
+  {"operation_type": "compress", "parameters": {"quality": 80}},
+  {"operation_type": "convert", "parameters": {"format": "webp"}}
+]</pre>
+            </div>
+        </article>
+
+        <article class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <h2 class="text-2xl font-bold text-slate-950">3. Supported operations</h2>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Resize</h3>
+                    <p class="mt-2 text-sm text-slate-600">Requires <code>width</code> and <code>height</code> in pixels.</p>
+                </div>
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Compress</h3>
+                    <p class="mt-2 text-sm text-slate-600">Requires <code>quality</code>. Authenticated users can use 10-95, anonymous users 40-80.</p>
+                </div>
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Convert</h3>
+                    <p class="mt-2 text-sm text-slate-600">Requires <code>format</code>. Allowed values are <code>jpg</code>, <code>png</code>, and <code>webp</code>.</p>
+                </div>
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Filter</h3>
+                    <p class="mt-2 text-sm text-slate-600">Requires <code>type</code>. Allowed values are <code>grayscale</code>, <code>blur</code>, and <code>sharpen</code>.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <h2 class="text-2xl font-bold text-slate-950">4. Track processing state</h2>
+            <p class="mt-3 text-slate-600">
+                A successful upload creates an image resource. Use the returned detail URL, or request
+                <code>GET /api/images/{uuid}/</code>, to monitor progress.
+            </p>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-3">
+                <div class="rounded-md border border-line p-5">
+                    <h3 class="font-semibold text-slate-950">Pending</h3>
+                    <p class="mt-2 text-sm text-slate-600">The job has been accepted and is waiting to be processed.</p>
+                </div>
+                <div class="rounded-md border border-line p-5">
+                    <h3 class="font-semibold text-slate-950">Processing</h3>
+                    <p class="mt-2 text-sm text-slate-600">The worker is handling the image. The response may include an estimated ready time.</p>
+                </div>
+                <div class="rounded-md border border-line p-5">
+                    <h3 class="font-semibold text-slate-950">Completed</h3>
+                    <p class="mt-2 text-sm text-slate-600">The detail response includes a download URL once the processed image is ready.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <h2 class="text-2xl font-bold text-slate-950">5. Download before expiry</h2>
+            <p class="mt-3 text-slate-600">
+                Download through <code>GET /api/images/{uuid}/download/</code> after processing completes.
+                Downloads are only available for a limited time.
+            </p>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <div class="rounded-md bg-orange-50 p-5">
+                    <h3 class="font-semibold text-orange-900">Initial expiry window</h3>
+                    <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-orange-900/80">
+                        <li>Authenticated users: 1 hour</li>
+                        <li>Anonymous users: 10 minutes</li>
+                    </ul>
+                </div>
+                <div class="rounded-md bg-teal-50 p-5">
+                    <h3 class="font-semibold text-teal-900">After a download</h3>
+                    <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-teal-900/80">
+                        <li>Authenticated users: 5 minutes</li>
+                        <li>Anonymous users: 20 seconds</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <article class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <h2 class="text-2xl font-bold text-slate-950">6. Limits and request policy</h2>
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Upload limits</h3>
+                    <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
+                        <li>Authenticated file size limit: 10 MB</li>
+                        <li>Anonymous file size limit: 2 MB</li>
+                        <li>Anonymous users can only submit up to 2 operations</li>
+                    </ul>
+                </div>
+                <div class="rounded-md bg-slate-50 p-5">
+                    <h3 class="font-semibold text-slate-950">Throttle limits</h3>
+                    <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
+                        <li>Authenticated users: 20 requests per minute</li>
+                        <li>Anonymous users: 5 requests per minute</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-wrap gap-4">
+                <a href="{% url 'swagger-ui' %}" class="rounded-md bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                    Open Swagger
+                </a>
+                <a href="{% url 'redoc' %}" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950">
+                    Open ReDoc
+                </a>
+            </div>
+        </article>
+    </div>
+</section>
 {% endblock %}
