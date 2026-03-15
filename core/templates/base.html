@@ -54,6 +54,18 @@
                         <a href="https://github.com/JhayceeCodes/ImageProAPI" class="rounded-md px-4 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-accent/30">
                             GitHub
                         </a>
+                        <a href="{% url 'login-page' %}" data-auth="logged-out" class="rounded-md px-4 py-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-accent/30">
+                            Log in
+                        </a>
+                        <a href="{% url 'register-page' %}" data-auth="logged-out" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-700 transition hover:border-slate-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-accent/30">
+                            Register
+                        </a>
+                        <span data-auth="logged-in" class="hidden rounded-md bg-slate-100 px-4 py-2 text-slate-600">
+                            Signed in
+                        </span>
+                        <button data-auth="logged-in" id="logout-button" type="button" class="hidden rounded-md bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/30">
+                            Log out
+                        </button>
                         <a href="https://www.linkedin.com/in/jethroayegbe/" class="rounded-md bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/30">
                             Contact
                         </a>
@@ -79,6 +91,7 @@
             </div>
         </footer>
     </div>
-
+    <script src="{% static 'js/auth.js' %}"></script>
+    {% block page_scripts %}{% endblock %}
 </body>
 </html>

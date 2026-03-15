@@ -1,9 +1,8 @@
 (() => {
     const uploadForm = document.getElementById("upload-form");
-    const registerForm = document.getElementById("register-form");
-    const loginForm = document.getElementById("login-form");
     const resetUploadFormButton = document.getElementById("reset-upload-form");
-    const authTokenField = document.getElementById("auth-token");
+    const playgroundAuthSummary = document.getElementById("playground-auth-summary");
+    const playgroundAuthActions = document.getElementById("playground-auth-actions");
     const operationsPreview = document.getElementById("operations-preview");
     const operationCount = document.getElementById("operation-count");
     const responseStatus = document.getElementById("response-status");
@@ -82,15 +81,6 @@
             heading: heading || "",
             bodyText: bodyText || "The server returned an HTML document instead of a JSON API response.",
         };
-    }
-
-    function authHeaders() {
-        const headers = {};
-        const token = authTokenField.value.trim();
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-        return headers;
     }
 
     function clearPreviewObjectUrl() {
@@ -280,9 +270,7 @@
         }
 
         try {
-            const response = await fetch(jobState.downloadUrl, {
-                headers: authHeaders(),
-            });
+            const response = await window.ImageProAuth.authorizedFetch(jobState.downloadUrl);
 
             if (!response.ok) {
                 setResponseState("The image is marked complete, but downloading the preview failed.", "warning");
@@ -313,9 +301,7 @@
         jobDetailUrl.textContent = targetUrl;
 
         try {
-            const response = await fetch(targetUrl, {
-                headers: authHeaders(),
-            });
+            const response = await window.ImageProAuth.authorizedFetch(targetUrl);
             const result = await readResponseBody(response);
             showResponsePayload(result);
 
@@ -367,46 +353,21 @@
         }
     }
 
+    function updatePlaygroundAuthSummary() {
+        const auth = window.ImageProAuth.readStoredAuth();
+        if (auth && auth.access) {
+            playgroundAuthSummary.textContent = "You are signed in. The playground will automatically attach your saved access token and refresh it when needed.";
+            playgroundAuthActions.classList.add("hidden");
+            return;
+        }
+        playgroundAuthSummary.textContent = "You are currently using the anonymous flow. Log in from the main app navigation to use saved tokens here automatically.";
+        playgroundAuthActions.classList.remove("hidden");
+    }
+
     function bindFormListeners() {
         Object.values(uploadFields).forEach((element) => {
             element.addEventListener("input", updateOperationsPreview);
             element.addEventListener("change", updateOperationsPreview);
-        });
-
-        registerForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-
-            const payload = {
-                username: document.getElementById("register-username").value.trim(),
-                email: document.getElementById("register-email").value.trim(),
-                password: document.getElementById("register-password").value,
-            };
-
-            await submitJsonForm(
-                "/accounts/register/",
-                payload,
-                "Registration succeeded. You can now log in to get an access token."
-            );
-        });
-
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-
-            const payload = {
-                username: document.getElementById("login-username").value.trim(),
-                password: document.getElementById("login-password").value,
-            };
-
-            await submitJsonForm(
-                "/accounts/login/",
-                payload,
-                "Login succeeded. The access token has been inserted into the upload form.",
-                (body) => {
-                    if (body && body.access) {
-                        authTokenField.value = body.access;
-                    }
-                }
-            );
         });
 
         uploadForm.addEventListener("submit", async (event) => {
@@ -422,16 +383,13 @@
             formData.append("original_image", uploadFields.originalImage.files[0]);
             formData.append("operations", JSON.stringify(operations));
 
-            const headers = authHeaders();
-
             responsePreview.textContent = "Submitting request...";
             responseStatus.classList.add("hidden");
 
             try {
-                const response = await fetch("/api/images/", {
+                const response = await window.ImageProAuth.authorizedFetch("/api/images/", {
                     method: "POST",
                     body: formData,
-                    headers,
                 });
 
                 const result = await readResponseBody(response);
@@ -490,6 +448,7 @@
     function initPlayground() {
         bindFormListeners();
         resetJobState();
+        updatePlaygroundAuthSummary();
         updateOperationsPreview();
     }
 

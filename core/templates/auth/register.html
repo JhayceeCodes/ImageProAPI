@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ImageProAPI | Register{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-6 py-16">
+    <div class="rounded-md border border-line bg-white p-8 shadow-soft">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-orange-600">Account</p>
+        <h1 class="mt-4 text-4xl font-black tracking-tight text-slate-950">Create account</h1>
+        <p class="mt-4 text-base leading-8 text-slate-600">
+            Register here, then log in to persist tokens inside the app. Once signed in, the playground will use the saved session automatically.
+        </p>
+
+        <form id="app-register-form" class="mt-8 space-y-5">
+            <div>
+                <label for="app-register-username" class="block text-sm font-semibold text-slate-950">Username</label>
+                <input id="app-register-username" name="username" type="text" class="mt-2 w-full rounded-md border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+            </div>
+            <div>
+                <label for="app-register-email" class="block text-sm font-semibold text-slate-950">Email</label>
+                <input id="app-register-email" name="email" type="email" class="mt-2 w-full rounded-md border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+            </div>
+            <div>
+                <label for="app-register-password" class="block text-sm font-semibold text-slate-950">Password</label>
+                <input id="app-register-password" name="password" type="password" class="mt-2 w-full rounded-md border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+            </div>
+            <div id="auth-form-status" class="hidden rounded-md px-4 py-3 text-sm font-medium"></div>
+            <div class="flex flex-wrap gap-4">
+                <button type="submit" class="rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                    Register
+                </button>
+                <a href="{% url 'login-page' %}" class="rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950">
+                    Go to login
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{% static 'js/auth-pages.js' %}"></script>
+{% endblock %}
