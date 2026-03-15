@@ -234,6 +234,51 @@
         </section>
 
         <section class="rounded-md border border-line bg-white p-6 shadow-soft">
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-xl font-bold text-slate-950">Job result</h2>
+                <span id="job-status-badge" class="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">No job yet</span>
+            </div>
+            <p id="job-summary" class="mt-3 text-sm leading-7 text-slate-600">
+                Submit an upload to populate the job details, poll processing status, and preview the finished image.
+            </p>
+            <dl class="mt-4 space-y-3 text-sm text-slate-600">
+                <div>
+                    <dt class="font-semibold text-slate-950">Image ID</dt>
+                    <dd id="job-image-id" class="mt-1 break-all">-</dd>
+                </div>
+                <div>
+                    <dt class="font-semibold text-slate-950">Detail URL</dt>
+                    <dd id="job-detail-url" class="mt-1 break-all">-</dd>
+                </div>
+                <div>
+                    <dt class="font-semibold text-slate-950">Download URL</dt>
+                    <dd id="job-download-url" class="mt-1 break-all">-</dd>
+                </div>
+            </dl>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <button
+                    type="button"
+                    id="poll-job-status"
+                    class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
+                >
+                    Poll status
+                </button>
+                <a
+                    id="download-image-link"
+                    href="#"
+                    download="processed-image"
+                    class="hidden rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                    Download image
+                </a>
+            </div>
+            <div id="image-preview-container" class="mt-5 hidden">
+                <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Preview</div>
+                <img id="image-preview" alt="Processed image preview" class="w-full rounded-md border border-line bg-slate-50 object-contain">
+            </div>
+        </section>
+
+        <section class="rounded-md border border-line bg-white p-6 shadow-soft">
             <h2 class="text-xl font-bold text-slate-950">Request notes</h2>
             <ul class="mt-4 list-disc space-y-3 pl-5 text-sm leading-7 text-slate-600">
                 <li>The backend expects multipart form data with <code>original_image</code> and <code>operations</code>.</li>
@@ -260,6 +305,15 @@
         const toggleHtmlPreviewButton = document.getElementById("toggle-html-preview");
         const htmlResponseContainer = document.getElementById("html-response-container");
         const htmlResponseFrame = document.getElementById("html-response-frame");
+        const pollJobStatusButton = document.getElementById("poll-job-status");
+        const jobStatusBadge = document.getElementById("job-status-badge");
+        const jobSummary = document.getElementById("job-summary");
+        const jobImageId = document.getElementById("job-image-id");
+        const jobDetailUrl = document.getElementById("job-detail-url");
+        const jobDownloadUrl = document.getElementById("job-download-url");
+        const imagePreviewContainer = document.getElementById("image-preview-container");
+        const imagePreview = document.getElementById("image-preview");
+        const downloadImageLink = document.getElementById("download-image-link");
 
         const uploadFields = {
             originalImage: document.getElementById("original-image"),
@@ -272,6 +326,12 @@
             filterType: document.getElementById("filter-type"),
             enableConvert: document.getElementById("enable-convert"),
             convertFormat: document.getElementById("convert-format"),
+        };
+        const jobState = {
+            id: null,
+            detailUrl: null,
+            downloadUrl: null,
+            previewObjectUrl: null,
         };
 
         function setResponseState(message, kind) {
@@ -310,6 +370,155 @@
                 heading: heading || "",
                 bodyText: bodyText || "The server returned an HTML document instead of a JSON API response.",
             };
+        }
+
+        function authHeaders() {
+            const headers = {};
+            const token = authTokenField.value.trim();
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+            return headers;
+        }
+
+        function clearPreviewObjectUrl() {
+            if (jobState.previewObjectUrl) {
+                URL.revokeObjectURL(jobState.previewObjectUrl);
+                jobState.previewObjectUrl = null;
+            }
+        }
+
+        function resetJobState() {
+            clearPreviewObjectUrl();
+            jobState.id = null;
+            jobState.detailUrl = null;
+            jobState.downloadUrl = null;
+            jobStatusBadge.textContent = "No job yet";
+            jobStatusBadge.className = "rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+            jobSummary.textContent = "Submit an upload to populate the job details, poll processing status, and preview the finished image.";
+            jobImageId.textContent = "-";
+            jobDetailUrl.textContent = "-";
+            jobDownloadUrl.textContent = "-";
+            imagePreviewContainer.classList.add("hidden");
+            imagePreview.removeAttribute("src");
+            downloadImageLink.classList.add("hidden");
+            downloadImageLink.removeAttribute("href");
+        }
+
+        function setJobBadge(status) {
+            const classes = {
+                pending: "rounded-md bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700",
+                processing: "rounded-md bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700",
+                completed: "rounded-md bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700",
+                failed: "rounded-md bg-red-50 px-3 py-1 text-xs font-semibold text-red-700",
+            };
+
+            jobStatusBadge.textContent = status || "unknown";
+            jobStatusBadge.className = classes[status] || "rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+        }
+
+        function normalizeUrl(url) {
+            if (!url) {
+                return null;
+            }
+            try {
+                return new URL(url, window.location.origin).toString();
+            } catch (_) {
+                return url;
+            }
+        }
+
+        async function fetchPreviewImage() {
+            if (!jobState.downloadUrl) {
+                return;
+            }
+
+            try {
+                const response = await fetch(jobState.downloadUrl, {
+                    headers: authHeaders(),
+                });
+
+                if (!response.ok) {
+                    setResponseState("The image is marked complete, but downloading the preview failed.", "warning");
+                    return;
+                }
+
+                const blob = await response.blob();
+                clearPreviewObjectUrl();
+                jobState.previewObjectUrl = URL.createObjectURL(blob);
+                imagePreview.src = jobState.previewObjectUrl;
+                imagePreviewContainer.classList.remove("hidden");
+                downloadImageLink.href = jobState.previewObjectUrl;
+                downloadImageLink.download = `processed-image.${blob.type.split("/")[1] || "bin"}`;
+                downloadImageLink.classList.remove("hidden");
+            } catch (error) {
+                setResponseState("The image is ready, but the preview request failed.", "warning");
+            }
+        }
+
+        async function syncJobResult(detailUrlOverride) {
+            const targetUrl = normalizeUrl(detailUrlOverride || jobState.detailUrl);
+            if (!targetUrl) {
+                setResponseState("There is no detail URL available for polling yet.", "error");
+                return;
+            }
+
+            jobState.detailUrl = targetUrl;
+            jobDetailUrl.textContent = targetUrl;
+
+            try {
+                const response = await fetch(targetUrl, {
+                    headers: authHeaders(),
+                });
+                const result = await readResponseBody(response);
+                showResponsePayload(result);
+
+                if (!response.ok) {
+                    if (result.kind !== "html") {
+                        setResponseState(`Polling failed with status ${response.status}.`, "error");
+                    }
+                    return;
+                }
+
+                if (result.kind !== "json" || !result.body) {
+                    setResponseState("Detail polling did not return the expected JSON payload.", "warning");
+                    return;
+                }
+
+                const body = result.body;
+                jobState.id = body.id || jobState.id;
+                jobState.downloadUrl = normalizeUrl(body.download_url);
+                jobImageId.textContent = jobState.id || "-";
+                jobDownloadUrl.textContent = jobState.downloadUrl || "-";
+                setJobBadge(body.status);
+
+                if (body.status === "completed" && jobState.downloadUrl) {
+                    jobSummary.textContent = "The image has finished processing. Preview and download are now available.";
+                    await fetchPreviewImage();
+                } else if (body.status === "processing") {
+                    clearPreviewObjectUrl();
+                    imagePreviewContainer.classList.add("hidden");
+                    downloadImageLink.classList.add("hidden");
+                    jobSummary.textContent = body.seconds_remaining != null
+                        ? `The image is still processing. Estimated time remaining: ${body.seconds_remaining} seconds.`
+                        : "The image is still processing.";
+                } else if (body.status === "pending") {
+                    clearPreviewObjectUrl();
+                    imagePreviewContainer.classList.add("hidden");
+                    downloadImageLink.classList.add("hidden");
+                    jobSummary.textContent = "The upload has been accepted and is waiting to be processed.";
+                } else if (body.status === "failed") {
+                    clearPreviewObjectUrl();
+                    imagePreviewContainer.classList.add("hidden");
+                    downloadImageLink.classList.add("hidden");
+                    jobSummary.textContent = "The image job failed during processing.";
+                }
+
+                setResponseState(`Job status updated: ${body.status}.`, body.status === "failed" ? "error" : "success");
+            } catch (error) {
+                responsePreview.textContent = String(error);
+                setResponseState("Network error while polling the image detail endpoint.", "error");
+            }
         }
 
         function buildOperations() {
@@ -500,11 +709,7 @@
             formData.append("original_image", uploadFields.originalImage.files[0]);
             formData.append("operations", JSON.stringify(operations));
 
-            const headers = {};
-            const token = authTokenField.value.trim();
-            if (token) {
-                headers.Authorization = `Bearer ${token}`;
-            }
+            const headers = authHeaders();
 
             responsePreview.textContent = "Submitting request...";
             responseStatus.classList.add("hidden");
@@ -526,6 +731,20 @@
                     return;
                 }
 
+                if (result.kind === "json" && result.body) {
+                    jobState.id = result.body.id || null;
+                    jobState.detailUrl = normalizeUrl(result.body.detail_url);
+                    jobState.downloadUrl = null;
+                    jobImageId.textContent = jobState.id || "-";
+                    jobDetailUrl.textContent = jobState.detailUrl || "-";
+                    jobDownloadUrl.textContent = "-";
+                    setJobBadge(result.body.status || "pending");
+                    jobSummary.textContent = "Upload request accepted. Poll the job status to track processing and unlock preview/download.";
+                    setResponseState("Upload request accepted. Use the job result panel to poll status.", "success");
+                    await syncJobResult(jobState.detailUrl);
+                    return;
+                }
+
                 setResponseState("Upload request accepted.", "success");
             } catch (error) {
                 responsePreview.textContent = String(error);
@@ -539,6 +758,7 @@
             htmlPreviewActions.classList.add("hidden");
             htmlResponseContainer.classList.add("hidden");
             htmlResponseFrame.srcdoc = "";
+            resetJobState();
         });
 
         toggleHtmlPreviewButton.addEventListener("click", () => {
@@ -549,6 +769,11 @@
                 : "Preview HTML response";
         });
 
+        pollJobStatusButton.addEventListener("click", async () => {
+            await syncJobResult();
+        });
+
+        resetJobState();
         updateOperationsPreview();
     })();
 </script>
