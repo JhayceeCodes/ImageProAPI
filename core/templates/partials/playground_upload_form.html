@@ -1,0 +1,138 @@
+<section class="w-full rounded-md border border-line bg-white p-8 shadow-soft">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-950">Upload request builder</h2>
+            <p class="mt-1 text-sm text-slate-600">
+                Use the token you get from the auth tools, or leave it blank and upload anonymously.
+            </p>
+        </div>
+        <span class="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
+            POST /api/images/
+        </span>
+    </div>
+
+    <form id="upload-form" class="mt-8 space-y-8" aria-label="Upload request builder">
+        <div class="grid gap-6 md:grid-cols-2">
+            <div>
+                <div class="rounded-md border border-line bg-slate-50 p-4">
+                    <h3 class="text-sm font-semibold text-slate-950">Authentication state</h3>
+                    <p id="playground-auth-summary" class="mt-2 text-sm leading-7 text-slate-600">
+                        You are currently using the anonymous flow. Log in from the main app navigation to use saved tokens here automatically.
+                    </p>
+                    <div id="playground-auth-actions" class="mt-3 flex flex-wrap gap-3">
+                        <a href="/login/" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950">
+                            Log in
+                        </a>
+                        <a href="/register/" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+                            Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="original-image" class="block text-sm font-semibold text-slate-950">Image file</label>
+                <input
+                    id="original-image"
+                    name="original_image"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    class="mt-2 block w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                >
+                <p class="mt-2 text-xs leading-6 text-slate-500">
+                    Supported formats: jpg, png, webp. Authenticated uploads allow up to 10 MB. Anonymous uploads allow up to 2 MB.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <fieldset class="rounded-md border border-line p-5">
+                <div class="flex items-start gap-3">
+                    <input id="enable-resize" name="enable-resize" type="checkbox" class="mt-1 h-4 w-4 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-400">
+                    <div>
+                        <label for="enable-resize" class="block text-base font-semibold text-slate-950">Resize</label>
+                        <p class="mt-1 text-sm leading-7 text-slate-600">Change the output dimensions with explicit width and height values.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="resize-width" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Width</label>
+                        <input id="resize-width" name="resize-width" type="number" min="1" placeholder="1200" class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+                    </div>
+                    <div>
+                        <label for="resize-height" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Height</label>
+                        <input id="resize-height" name="resize-height" type="number" min="1" placeholder="900" class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="rounded-md border border-line p-5">
+                <div class="flex items-start gap-3">
+                    <input id="enable-compress" name="enable-compress" type="checkbox" class="mt-1 h-4 w-4 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-400">
+                    <div>
+                        <label for="enable-compress" class="block text-base font-semibold text-slate-950">Compress</label>
+                        <p class="mt-1 text-sm leading-7 text-slate-600">Lower output quality to reduce file size.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="compress-quality" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Quality</label>
+                    <input id="compress-quality" name="compress-quality" type="number" min="10" max="95" placeholder="80" class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+                    <p class="mt-2 text-xs leading-6 text-slate-500">
+                        Authenticated range: 10-95. Anonymous range: 40-80.
+                    </p>
+                </div>
+            </fieldset>
+
+            <fieldset class="rounded-md border border-line p-5">
+                <div class="flex items-start gap-3">
+                    <input id="enable-filter" name="enable-filter" type="checkbox" class="mt-1 h-4 w-4 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-400">
+                    <div>
+                        <label for="enable-filter" class="block text-base font-semibold text-slate-950">Filter</label>
+                        <p class="mt-1 text-sm leading-7 text-slate-600">Apply a grayscale, blur, or sharpen effect.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="filter-type" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Filter type</label>
+                    <select id="filter-type" name="filter-type" class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+                        <option value="">Select a filter</option>
+                        <option value="grayscale">Grayscale</option>
+                        <option value="blur">Blur</option>
+                        <option value="sharpen">Sharpen</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset class="rounded-md border border-line p-5">
+                <div class="flex items-start gap-3">
+                    <input id="enable-convert" name="enable-convert" type="checkbox" class="mt-1 h-4 w-4 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-400">
+                    <div>
+                        <label for="enable-convert" class="block text-base font-semibold text-slate-950">Convert format</label>
+                        <p class="mt-1 text-sm leading-7 text-slate-600">Choose the output format the processed image should use.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="convert-format" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Output format</label>
+                    <select id="convert-format" name="convert-format" class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-500 focus:ring-4 focus:ring-slate-200">
+                        <option value="">Keep original format</option>
+                        <option value="jpg">JPG</option>
+                        <option value="png">PNG</option>
+                        <option value="webp">WEBP</option>
+                    </select>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="flex flex-wrap gap-4">
+            <button type="submit" class="rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                Submit upload
+            </button>
+            <button type="reset" id="reset-upload-form" class="rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950">
+                Reset form
+            </button>
+        </div>
+    </form>
+</section>

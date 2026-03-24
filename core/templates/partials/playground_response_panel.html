@@ -1,0 +1,27 @@
+<section class="rounded-md border border-line bg-white p-6 shadow-soft">
+    <h2 class="text-xl font-bold text-slate-950">Response panel</h2>
+    <div id="response-status" class="mt-4 hidden rounded-md px-4 py-3 text-sm font-medium"></div>
+    <div class="mt-4 overflow-x-auto rounded-md bg-slate-950 p-5">
+<pre id="response-preview" class="text-sm leading-7 text-slate-100">No request submitted yet.</pre>
+    </div>
+    <div class="mt-4 hidden" id="html-preview-actions">
+        <button
+            type="button"
+            id="toggle-html-preview"
+            class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
+        >
+            Preview HTML response
+        </button>
+    </div>
+    <div id="html-response-container" class="mt-4 hidden">
+        <div class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rendered HTML response</div>
+        <iframe
+            id="html-response-frame"
+            title="Rendered HTML response"
+            class="h-[28rem] w-full rounded-md border border-line bg-white"
+        ></iframe>
+    </div>
+    <p class="mt-3 text-xs leading-6 text-slate-500">
+        JSON and text responses appear above. Trusted HTML responses are also rendered below in an isolated frame.
+    </p>
+</section>

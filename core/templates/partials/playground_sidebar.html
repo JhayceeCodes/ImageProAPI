@@ -1,0 +1,16 @@
+<aside class="w-full space-y-6 lg:w-[360px]">
+    {% include "partials/playground_job_result.html" %}
+
+    <section class="rounded-md border border-line bg-white p-6 shadow-soft">
+        <div class="flex items-center justify-between gap-3">
+            <h2 class="text-xl font-bold text-slate-950">Derived operations JSON</h2>
+            <span id="operation-count" class="rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">0 operations</span>
+        </div>
+        <div class="mt-4 overflow-x-auto rounded-md bg-slate-950 p-5">
+<pre id="operations-preview" class="text-sm leading-7 text-slate-100">[]</pre>
+        </div>
+    </section>
+
+    {% include "partials/playground_response_panel.html" %}
+    {% include "partials/playground_request_notes.html" %}
+</aside>

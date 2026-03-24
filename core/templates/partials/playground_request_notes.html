@@ -1,0 +1,9 @@
+<section class="rounded-md border border-line bg-white p-6 shadow-soft">
+    <h2 class="text-xl font-bold text-slate-950">Request notes</h2>
+    <ul class="mt-4 list-disc space-y-3 pl-5 text-sm leading-7 text-slate-600">
+        <li>The backend expects multipart form data with <code>original_image</code> and <code>operations</code>.</li>
+        <li>The <code>operations</code> field must be a JSON array, even if you only choose one operation.</li>
+        <li>Anonymous uploads are allowed, but they are limited to 2 operations and smaller files.</li>
+        <li>Authenticated requests use a Bearer token and get higher limits.</li>
+    </ul>
+</section>
