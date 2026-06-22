@@ -96,7 +96,7 @@ The system is designed to prevent heavy image operations from blocking API reque
 To run the project using Docker:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 This will start:
